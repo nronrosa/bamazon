@@ -89,7 +89,7 @@ function lowInventory() {
 
 function addInventory() {
     console.log("|--------------------Bamazon ADD Inventory--------------------|")
-    
+
     inquirer
         .prompt([{
                 name: "addToItemId",
@@ -115,12 +115,27 @@ function addInventory() {
                         console.log("Item ID: " + results[0].item_id);
                         console.log("Product Name: " + results[0].product_name);
                         console.log("Added " + answer.howMany + " to inventory for a new total of " + newStockQty);
-                        console.log("------------------------------------------------------------");
                     }
                 );
 
+                connection.query("SELECT item_id, product_name, department_name, price, stock_quantity FROM products WHERE ?", {
+                    item_id: answer.addToItemId
+                }, function (err, results) {
+                    var table = new Table({
+                        head: ["Id", "Product Name", "Dept Name", "Price", "Qty"],
+                        colWidths: [6, 65, 20, 10, 6]
+                    });
+
+                    for (var i = 0; i < results.length; i++) {
+                        table.push([results[i].item_id, results[i].product_name, results[i].department_name, results[i].price, results[i].stock_quantity]);
+                    }
+                    console.log(table.toString());
+                    managerReports();
+                });
+
 
             });
+
 
         });
 
@@ -131,14 +146,15 @@ function addProduct() {
     console.log("|--------------------Bamazon ADD NEW PRODUCT--------------------|")
     inquirer
         .prompt([{
+                name: "deptName",
+                type: "list",
+                choices: ["Baby", "Books", "Clothing", "Electronics", "Kitchen", "Movies", "Music", "Office", "Pet", "Shoes", "Toys and Games"],
+                message: "Choose the department name",
+            },
+            {
                 name: "newProductName",
                 type: "input",
                 message: "What is the new product name?",
-            },
-            {
-                name: "deptName",
-                type: "input",
-                message: "What is the department name?",
             },
             {
                 name: "price",
