@@ -47,25 +47,27 @@ function managerReports() {
 
                 case "Quit":
                     connection.end();
+                    break;
             };
         });
 };
 
 function productsForSale() {
     console.log("\r\n|--------------------Bamazon Products--------------------|")
-    connection.query("SELECT item_id, product_name, department_name, price, stock_quantity FROM products", function (err, results) {
+    connection.query("SELECT item_id, product_name, department_name, price, stock_quantity FROM products", function (err, response) {
         tableData = new Table({
             head: ["Id", "Product Name", "Dept Name", "Price", "Qty"],
             colWidths: [6, 65, 20, 10, 6]
         });
 
-        for (var i = 0; i < results.length; i++) {
-            price = results[i].price.toString();
-            if (price.indexOf(".") === -1) {
-                price += ".00";
-            }
-            tableData.push([results[i].item_id, results[i].product_name, results[i].department_name, price, results[i].stock_quantity]);
-        }
+        for (var i = 0; i < response.length; i++) {
+            price = numberCurrency(response[i].price, "$");
+            // .toString();
+            // if (price.indexOf(".") === -1) {
+            //     price += ".00";
+            // }
+            tableData.push([response[i].item_id, response[i].product_name, response[i].department_name, price, response[i].stock_quantity]);
+        };
         console.log(tableData.toString());
         managerReports();
     });
@@ -74,19 +76,20 @@ function productsForSale() {
 
 function lowInventory() {
     console.log("\r\n|--------------------Bamazon LOW Inventory (less than 5)--------------------|")
-    connection.query("SELECT item_id, product_name, department_name, price, stock_quantity FROM products WHERE stock_quantity < 5", function (err, results) {
+    connection.query("SELECT item_id, product_name, department_name, price, stock_quantity FROM products WHERE stock_quantity < 5", function (err, response) {
         tableData = new Table({
             head: ["Id", "Product Name", "Dept Name", "Price", "Qty"],
             colWidths: [6, 65, 20, 10, 6]
         });
 
-        for (var i = 0; i < results.length; i++) {
-            price = results[i].price.toString();
-            if (price.indexOf(".") === -1) {
-                price += ".00";
-            }
-            tableData.push([results[i].item_id, results[i].product_name, results[i].department_name, price, results[i].stock_quantity]);
-        }
+        for (var i = 0; i < response.length; i++) {
+            price = numberCurrency(response[i].price, "$");
+            // price = response[i].price.toString();
+            // if (price.indexOf(".") === -1) {
+            //     price += ".00";
+            // }
+            tableData.push([response[i].item_id, response[i].product_name, response[i].department_name, price, response[i].stock_quantity]);
+        };
         console.log(tableData.toString());
         managerReports();
 
@@ -127,33 +130,34 @@ function addInventory() {
         .then(function (answer) {
             connection.query("SELECT item_id, product_name, department_name, price, stock_quantity FROM products WHERE ?", {
                 item_id: answer.addToItemId
-            }, function (err, results) {
+            }, function (err, response) {
                 if (err) throw err;
-                connection.query("UPDATE products SET stock_quantity = stock_quantity + ? WHERE item_id = ?", [answer.howMany, results[0].item_id],
+                connection.query("UPDATE products SET stock_quantity = stock_quantity + ? WHERE item_id = ?", [answer.howMany, response[0].item_id],
                     function (error) {
                         if (error) throw err;
-                        var newStockQty = results[0].stock_quantity + parseInt(answer.howMany);
+                        var newStockQty = response[0].stock_quantity + parseInt(answer.howMany);
                         console.log("\r\n|--------------------New Inventory Added--------------------|");
-                        console.log("Item ID: " + results[0].item_id);
-                        console.log("Product Name: " + results[0].product_name);
+                        console.log("Item ID: " + response[0].item_id);
+                        console.log("Product Name: " + response[0].product_name);
                         console.log("Added " + answer.howMany + " to inventory for a new total of " + newStockQty);
                     }
                 );
 
                 connection.query("SELECT item_id, product_name, department_name, price, stock_quantity FROM products WHERE ?", {
                     item_id: answer.addToItemId
-                }, function (err, results) {
+                }, function (err, response) {
                     tableData = new Table({
                         head: ["Id", "Product Name", "Dept Name", "Price", "Qty"],
                         colWidths: [6, 65, 20, 10, 6]
                     });
 
-                    for (var i = 0; i < results.length; i++) {
-                        price = results[i].price.toString();
-                        if (price.indexOf(".") === -1) {
-                            price += ".00";
-                        }
-                        tableData.push([results[i].item_id, results[i].product_name, results[i].department_name, price, results[i].stock_quantity]);
+                    for (var i = 0; i < response.length; i++) {
+                        price = numberCurrency(response[i].price, "$");
+                        // price = response[i].price.toString();
+                        // if (price.indexOf(".") === -1) {
+                        //     price += ".00";
+                        // }
+                        tableData.push([response[i].item_id, response[i].product_name, response[i].department_name, price, response[i].stock_quantity]);
                     }
                     console.log(tableData.toString());
                     managerReports();
@@ -220,17 +224,17 @@ function addProduct() {
                         head: ["Id", "Product Name", "Dept Name", "Price", "Qty"],
                         colWidths: [6, 65, 20, 10, 6]
                     });
-                    var price = answer.price.toString();
-                    if (price.indexOf(".") === -1) {
-                        price += ".00";
-                    }
-
+                    price = numberCurrency(parseFloat(answer.price), "$");
+                   
                     tableData.push(["X", answer.newProductName, answer.deptName, price, parseInt(answer.stock)]);
                     console.log(tableData.toString());
                     managerReports();
                 }
             );
-
         });
-
 };
+
+
+function numberCurrency(n, currency) {
+    return currency + n.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,");
+  };

@@ -18,7 +18,6 @@ connection.connect(function (err) {
     productsDisplay();
 });
 
-
 function productsDisplay() {
     connection.query("SELECT item_id, product_name, department_name, price, stock_quantity FROM products", function (err, response) {
         tableData = new Table({
@@ -27,10 +26,8 @@ function productsDisplay() {
         });
 
         for (var i = 0; i < response.length; i++) {
-            var price = response[i].price.toString();
-            if (price.indexOf(".") === -1) {
-                price += ".00";
-            }
+            var price = numberCurrency(response[i].price, "$");
+
             tableData.push([response[i].item_id, response[i].product_name, response[i].department_name, price, response[i].stock_quantity]);
         }
         console.log(tableData.toString());
@@ -69,31 +66,30 @@ function shop() {
             }
         ])
         .then(function (answer) {
-            connection.query("SELECT item_id, product_name, department_name, price, stock_quantity FROM products WHERE ?", {
+            connection.query("SELECT item_id, product_name, department_name, price, stock_quantity, product_sales FROM products WHERE ?", {
                 item_id: answer.buyItemId
-            }, function (err, results) {
+            }, function (err, response) {
                 if (err) throw err;
-                if (results[0].stock_quantity < parseInt(answer.quantity)) {
-                    console.log("Insufficient supply to complete your order. There are " + results[0].stock_quantity + " item(s) left. Try again...");
+
+
+                if (response[0].stock_quantity < parseInt(answer.quantity)) {
+                    console.log("Insufficient supply to complete your order. There are " + response[0].stock_quantity + " item(s) left. Try again...");
                     continueToShop();
                 } else {
-                    console.log("You purchased '" + answer.quantity + "' of ");
-                    console.log("   Item ID: " + results[0].item_id + " Product Name: " + results[0].product_name);
+                    console.log("You purchased '" + answer.quantity + "' of Item ID: " + response[0].item_id + " Product Name: " + response[0].product_name);
+                    var total = response[0].price * answer.quantity;
+                    var totalProductSales = total + response[0].product_sales;
 
-                    connection.query("UPDATE products SET stock_quantity = stock_quantity - ? WHERE item_id = ?", [answer.quantity, results[0].item_id],
+                    connection.query("UPDATE products SET stock_quantity = stock_quantity - ?, product_sales = ? WHERE item_id = ?", [answer.quantity,totalProductSales, response[0].item_id],
                         function (error) {
                             if (error) throw err;
-                            var total = results[0].price * answer.quantity;
-                            var totalWithDecimal = total.toString();
-                            if (totalWithDecimal.indexOf(".") === -1) {
-                                totalWithDecimal += ".00";
-                            }
+                            var totalWithDecimal = numberCurrency(total, "$");
                             console.log("   Your total is: " + totalWithDecimal);
                             console.log("Your order completed successfully! Thanks for shopping at Bamazon!");
                             continueToShop();
+
                         }
                     );
-
                 }
             });
         });
@@ -117,3 +113,7 @@ function continueToShop() {
             }
         });
 };
+
+function numberCurrency(n, currency) {
+    return currency + n.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,");
+  };
