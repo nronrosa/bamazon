@@ -62,10 +62,7 @@ function productsForSale() {
 
         for (var i = 0; i < response.length; i++) {
             price = numberCurrency(response[i].price, "$");
-            // .toString();
-            // if (price.indexOf(".") === -1) {
-            //     price += ".00";
-            // }
+
             tableData.push([response[i].item_id, response[i].product_name, response[i].department_name, price, response[i].stock_quantity]);
         };
         console.log(tableData.toString());
@@ -84,10 +81,7 @@ function lowInventory() {
 
         for (var i = 0; i < response.length; i++) {
             price = numberCurrency(response[i].price, "$");
-            // price = response[i].price.toString();
-            // if (price.indexOf(".") === -1) {
-            //     price += ".00";
-            // }
+
             tableData.push([response[i].item_id, response[i].product_name, response[i].department_name, price, response[i].stock_quantity]);
         };
         console.log(tableData.toString());
@@ -153,10 +147,7 @@ function addInventory() {
 
                     for (var i = 0; i < response.length; i++) {
                         price = numberCurrency(response[i].price, "$");
-                        // price = response[i].price.toString();
-                        // if (price.indexOf(".") === -1) {
-                        //     price += ".00";
-                        // }
+  
                         tableData.push([response[i].item_id, response[i].product_name, response[i].department_name, price, response[i].stock_quantity]);
                     }
                     console.log(tableData.toString());
